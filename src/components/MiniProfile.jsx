@@ -6,7 +6,7 @@ import Image from "next/image";
 export default function MiniProfile() {
   const { data: session } = useSession();
   return (
-    <div className="flex items-center justify-between mt-14 scroll-ml-10">
+    <div className="flex items-center justify-between mt-14 ml-10 w-full">
       <Image
         width={64}
         height={64}

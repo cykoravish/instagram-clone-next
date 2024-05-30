@@ -84,6 +84,7 @@ export default function Header() {
     });
     setPostUploading(false);
     setIsOpen(false);
+    location.reload();
   }
   return (
     <div className="shadow-sm border-b sticky top-0 bg-white z-30 p-3">
@@ -155,7 +156,7 @@ export default function Header() {
                 width={250}
                 src={imageFileUrl}
                 alt="selected file"
-                className={`w-full max-h-[250px] object-cover cursor-pointer ${
+                className={`max-h-[250px] object-cover cursor-pointer ${
                   imageFileUploading ? "animate-pulse" : ""
                 }`}
               />
