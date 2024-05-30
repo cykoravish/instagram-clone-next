@@ -3,13 +3,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { signIn, useSession, signOut } from "next-auth/react";
 import Modal from "react-modal";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { HiCamera, HiOutlinePlusCircle } from "react-icons/hi";
 import { AiOutlineClose } from "react-icons/ai";
 
 export default function Header() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imageFileUrl, setImageFileUrl] = useState(null);
+  const filePickerRef = useRef();
+  console.log("ref: ", filePickerRef);
+
+  function addImageToPost(e) {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setImageFileUrl(URL.createObjectURL(file));
+    }
+  }
+
   return (
     <div className="shadow-sm border-b sticky top-0 bg-white z-30 p-3">
       <div className="flex justify-between items-center max-w-6xl mx-auto">
@@ -73,7 +86,28 @@ export default function Header() {
           ariaHideApp={false}
         >
           <div className="flex flex-col justify-center items-center h-[100%]">
-            <HiCamera className="text-5xl text-gray-400 cursor-pointer" />
+            {selectedFile ? (
+              <Image
+                onClick={() => setSelectedFile(null)}
+                height={250}
+                width={250}
+                src={imageFileUrl}
+                alt="selected file"
+                className="w-full max-h-[250px] object-cover cursor-pointer"
+              />
+            ) : (
+              <HiCamera
+                onClick={() => filePickerRef.current.click()}
+                className="text-5xl text-gray-400 cursor-pointer"
+              />
+            )}
+            <input
+              ref={filePickerRef}
+              hidden
+              type="file"
+              accept="image/*"
+              onChange={addImageToPost}
+            />
           </div>
           <input
             type="text"
@@ -88,7 +122,7 @@ export default function Header() {
             Upload Post
           </button>
           <AiOutlineClose
-            className="cursor-pointer absolute top-2 right-2 hover:text-red-600 transition duration-300"
+            className="cursor-pointer text-black absolute top-2 right-2 hover:text-red-600 transition duration-300"
             onClick={() => setIsOpen(false)}
           />
         </Modal>
