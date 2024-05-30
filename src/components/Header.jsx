@@ -3,17 +3,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { signIn, useSession, signOut } from "next-auth/react";
 import Modal from "react-modal";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HiCamera, HiOutlinePlusCircle } from "react-icons/hi";
 import { AiOutlineClose } from "react-icons/ai";
+import { app } from "@/firebase";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
 
 export default function Header() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageFileUrl, setImageFileUrl] = useState(null);
-  const filePickerRef = useRef();
-  console.log("ref: ", filePickerRef);
+  const [imageFileUploading, setImageFileUploading] = useState(false);
+  const filePickerRef = useRef(null);
 
   function addImageToPost(e) {
     const file = e.target.files[0];
@@ -23,6 +30,38 @@ export default function Header() {
     }
   }
 
+  useEffect(() => {
+    if (selectedFile) {
+      uploadImageToStorage();
+    }
+  }, [selectedFile]);
+  async function uploadImageToStorage() {
+    setImageFileUploading(true);
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + "-" + selectedFile.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log("Upload is " + progress + "% done");
+      },
+      (error) => {
+        console.error(error);
+        setImageFileUploading(false);
+        setImageFileUrl(null);
+        setSelectedFile(null);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setImageFileUrl(downloadURL);
+          setImageFileUploading(false);
+        });
+      }
+    );
+  }
   return (
     <div className="shadow-sm border-b sticky top-0 bg-white z-30 p-3">
       <div className="flex justify-between items-center max-w-6xl mx-auto">
@@ -93,7 +132,9 @@ export default function Header() {
                 width={250}
                 src={imageFileUrl}
                 alt="selected file"
-                className="w-full max-h-[250px] object-cover cursor-pointer"
+                className={`w-full max-h-[250px] object-cover cursor-pointer ${
+                  imageFileUploading ? "animate-pulse" : ""
+                }`}
               />
             ) : (
               <HiCamera
